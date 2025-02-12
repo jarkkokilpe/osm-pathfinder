@@ -1,2 +1,3 @@
-export { TspSolver } from './tspSolver';
+import TspSolver from './tspSolver';
+export { TspSolver };
 export { Pathfinder } from './pathfinder';

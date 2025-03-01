@@ -13,17 +13,19 @@ export class Graph {
     }
   }
 
-  addEdge(from: number, to: number, weight: number) {
+  addEdge(from: number, to: number, weight: number, isOneway: boolean) {
     this.adjacencyList[from].push({ node: to, weight });
-    this.adjacencyList[to].push({ node: from, weight }); // Assuming bidirectional edges
+    if (!isOneway) {
+      this.adjacencyList[to].push({ node: from, weight });
+    }
   }
 }
 
-export function createGraph(nodes: Node[], edges: Edge[]): Graph {
+export function createGraph(nodes: Node[], edges: Edge[], isOneway: boolean[]): Graph {
   const graph = new Graph();
 
   nodes.forEach(node => graph.addNode(node.id));
-  edges.forEach(edge => graph.addEdge(edge.from, edge.to, edge.weight));
+  edges.forEach((edge, index) => graph.addEdge(edge.from, edge.to, edge.weight, isOneway[index]));
 
   return graph;
 }

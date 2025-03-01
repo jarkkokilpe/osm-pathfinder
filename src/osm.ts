@@ -1,9 +1,10 @@
-import { Coordinates, OSMData } from "./types/interfaces";
+import { Coordinates, OSMData, RawCoordinates } from "./types/interfaces";
 import { delay } from "./utils/misc";
 
 export class Osm {
   private apiBaseUrl = 'http://overpass-api.de/api/interpreter';
-
+  private wayOpts = `'highway'~'motorway|residential|trunk|primary|motorway_link|trunk_list|primary_link|living_street|unclassified|tertiary|secondary'`;
+    
   constructor (apiBaseUrl: string) { 
     if (apiBaseUrl) {
       this.apiBaseUrl = apiBaseUrl;
@@ -18,10 +19,12 @@ export class Osm {
    * @returns the way/node OSM data from the Overpass API
    */
   async getOsmWayDataCircle (coord: Coordinates, radius: number): Promise<OSMData> {
-    const wayOpts = `'highway'~'motorway|residential|trunk|primary|motorway_link|trunk_list|primary_link|living_street|unclassified|tertiary|secondary'`;
-    const response = await this.fetchOsmData(`way(around:${radius},${coord.lat},${coord.lon})[${wayOpts}]; out geom;`);
+    console.log('+getOsmWayDataCircle');
+    const prompt = `way(around:${radius},${coord.lat},${coord.lon})[${this.wayOpts}]; out geom;`;
+    console.log('prompt', prompt);
+    const response = await this.fetchOsmData(prompt);
     console.log('Circle Data:', response);
-    console.log('response', response.elements[0].geometry);
+    console.log('-getOsmWayDataCircle');
     return response;
   }
 
@@ -36,12 +39,14 @@ export class Osm {
    * @param padding value to widen the rectangle around the line in kilometers
    * @returns the way/node OSM data from the Overpass API
    */
-  async getOsmWayDataRectangle (coord: Coordinates, radius: number): Promise<OSMData> {
+  async getOsmWayDataRectangle (coord: Coordinates[]): Promise<OSMData> {
     console.log('+getOsmWayDataRectangle');
-    const wayOpts = `'highway'~'motorway|residential|trunk|primary|motorway_link|trunk_list|primary_link|living_street|unclassified|tertiary|secondary'`;
-    const response = await this.fetchOsmData(`way(around:${radius},${coord.lat},${coord.lon})[${wayOpts}]; out geom;`);
-    console.log('response', response);
-    
+    const coords = coord.map(c => `${c.lat} ${c.lon}`).join(' ');
+    const prompt = `way(poly:"${coords}")[${this.wayOpts}]; out geom;`;
+    console.log('coords', coords);
+    console.log('prompt', prompt);
+    const response = await this.fetchOsmData(prompt);
+    console.log('Rectangle data:', response);
     console.log('-getOsmWayDataRectangle');
     return response;
   }
@@ -58,9 +63,19 @@ export class Osm {
    * @returns the way/node OSM data from the Overpass API
    */
   private async fetchOsmData (execStr: string): Promise<OSMData> {
-    await delay(1000); // Add a one-second safety delay for API rate limiting
-    const response = await fetch(`${this.apiBaseUrl}?data=[out:json];${execStr}`);
-    const data = await response.json();
-    return data as OSMData;
+    console.log('+fetchOsmData');
+    try {
+      await delay(1000); // Add a one-second safety delay for API rate limiting
+      console.log('fetchOsmData: after delay');
+      const response = await fetch(`${this.apiBaseUrl}?data=[out:json][timeout:25];${execStr}`);
+      console.log('fetchOsmData: response', response);
+      const data = await response.json();
+      console.log('fetchOsmData: data', data);
+      console.log('-fetchOsmData');
+      return data as OSMData;
+    } catch (error) {
+      console.error('fetchOsmData error:', error);
+      return {} as OSMData;
+    }
   }
 }

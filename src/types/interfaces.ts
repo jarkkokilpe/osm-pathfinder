@@ -1,3 +1,14 @@
+export type CoordinatePair = [number, number];
+export type RawCoordinates = CoordinatePair[];
+
+export type RectangleCoordinates = [
+  CoordinatePair, 
+  CoordinatePair, 
+  CoordinatePair, 
+  CoordinatePair, 
+  CoordinatePair,
+];
+
 export interface Coordinates {
   lat: number;
   lon: number;
@@ -19,6 +30,17 @@ export interface Way {
   id: number;
   nodes: number[];
   geometry: { lat: number; lon: number }[];
+}
+
+export interface DijkstraObj {
+  path: { lat: number; lon: number }[];
+  distance: number;
+}
+
+export interface TspObj {
+  path: { lat: number; lon: number }[];
+  distance: number;
+  indexes: [number, number]; // Add indexes to track the input array indexes
 }
 
 export interface OSMData {
